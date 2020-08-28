@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang='ko'>
+<head>
+    <meta charset='utf-8'>
+    <title>뿡뿡이가 좋아하는 숫자야구</title>
+
+    <script defer type='module'>
+        import NumberBaseball from './src/js/numberBaseball.js';
+
+        function drawView() {
+            return new Promise((resolve, reject) => {
+                try {
+                    const targetDom = document.getElementById('contents');
+                    drawInningAt(targetDom);
+
+                    resolve(targetDom);
+
+                } catch (e) {
+                    console.log(e);
+                    reject();
+                }
+            });
+        }
+
+        function drawNumbersListAt(targetDom) {
+            const number_label = document.createElement('label');
+            number_label.for = 'number';
+            number_label.textContent = 'number : ';
+
+            targetDom.appendChild(number_label);
+
+            const number_input = document.createElement('input');
+            number_input.type = 'number';
+            number_input.max = '9';
+            number_input.min = '1';
+            number_input.name = 'number';
+
+            targetDom.appendChild(number_input.cloneNode(true));
+            targetDom.appendChild(number_input.cloneNode(true));
+            targetDom.appendChild(number_input.cloneNode(true));
+        }
+
+        function drawScoreListAt(targetDom) {
+            const label = document.createElement('label');
+
+            const score_ul = document.createElement('ul');
+            const score_li = document.createElement('li');
+
+            const strikeCount_label = label.cloneNode(true);
+            strikeCount_label.for = 'ballCount';
+            strikeCount_label.textContent = 'strike : ';
+
+            const ballCount_label = label.cloneNode(true);
+            ballCount_label.for = 'ballCount';
+            ballCount_label.textContent = 'ball : ';
+
+            const count_input = document.createElement('input');
+            count_input.type = 'number';
+            count_input.max = '3';
+            count_input.min = '0';
+
+            const strikeCount_input = count_input.cloneNode();
+            strikeCount_input.name = 'strikeCount';
+
+            const ballCount_input = count_input.cloneNode();
+            ballCount_input.name = 'ballCount';
+
+            const strike_li = score_li.cloneNode(true);
+            strike_li.appendChild(strikeCount_label);
+            strike_li.appendChild(strikeCount_input);
+
+            const ball_li = score_li.cloneNode(true);
+            ball_li.appendChild(ballCount_label);
+            ball_li.appendChild(ballCount_input);
+
+            score_ul.appendChild(strike_li);
+            score_ul.appendChild(ball_li);
+
+            targetDom.appendChild(score_ul);
+        }
+
+        function drawInningAt(targetDom) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const li = document.createElement('li');
+
+                    const inning_li = li.cloneNode(true);
+                    const inning_article = document.createElement('article');
+                    inning_article.className = 'inningArticle';
+
+                    const inning_detail_ul = document.createElement('ul');
+                    const number_li = li.cloneNode(true);
+                    const score_li = li.cloneNode(true);
+
+                    drawNumbersListAt(number_li);
+                    inning_detail_ul.appendChild(number_li);
+
+                    drawScoreListAt(score_li);
+                    inning_detail_ul.appendChild(score_li);
+
+                    inning_article.appendChild(inning_detail_ul);
+
+                    inning_li.appendChild(inning_article);
+
+                    targetDom.appendChild(inning_li);
+
+                    resolve(targetDom);
+
+                } catch (e) {
+                    console.log(e);
+                    reject(e);
+                }
+            });
+        }
+
+        function bindEvents() {
+            const btn_clear = document.getElementById('btn_clear');
+            btn_clear.addEventListener('click', e => {
+                location.reload();
+            });
+
+            const btn_add = document.getElementById('btn_add');
+            btn_add.addEventListener('click', e => {
+                const targetDom = document.getElementById('contents');
+                drawInningAt(targetDom);
+            });
+
+            const btn_result = document.getElementById('btn_result');
+            btn_result.addEventListener('click', e => {
+                const numberBaseball = new NumberBaseball();
+
+                const playHistory = [];
+
+                const articles = document.querySelectorAll('article');
+                articles.forEach(v => {
+                    const inningData = {
+                        numbers: '',
+                        strikeCount: 0,
+                        ballCount: 0
+                    };
+
+                    const numbers = v.querySelectorAll('input[name="number"]');
+                    numbers.forEach(n => {
+                        inningData.numbers += n.value;
+                    });
+
+                    v.querySelectorAll('input[name="strikeCount"]')
+                        .forEach(c => inningData.strikeCount += Number(c.value));
+
+                    v.querySelectorAll('input[name="ballCount"]')
+                        .forEach(c => inningData.ballCount += Number(c.value));
+
+                    playHistory.push(inningData);
+                });
+
+                const candidates = numberBaseball.playInningWith(playHistory);
+
+                document.getElementById('result').innerText = candidates.join(', ');
+            });
+        }
+
+        window.onload  = function () {
+            console.log('complete on load');
+            drawView()
+                .then(result => console.log(result))
+                .catch(err => console.log(err));
+
+            bindEvents();
+        }
+    </script>
+
+</head>
+<body>
+<header>
+    <h1>뿡뿡이가 좋아하는 숫자야구</h1>
+</header>
+<main>
+    <input type="button" id="btn_clear" value="Clear"/>
+    <input type="button" id="btn_add" value="Add"/>
+    <input type="button" id="btn_result" value="Result List of Candidate Numbers"/>
+
+    <hr/>
+
+    <div id="result">
+    </div>
+
+    <hr/>
+
+    <ul id="contents"></ul>
+
+</main>
+</body>
+</html>
